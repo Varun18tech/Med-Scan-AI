@@ -1,0 +1,1545 @@
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedScan AI — Medical Report Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal:#0d9488;--teal-l:#2dd4bf;--teal-dim:rgba(13,148,136,.15);
+      --bg:#060d18;--bg2:#0a1220;--bg3:#0d1628;--card:rgba(13,22,40,.85);
+      --border:rgba(255,255,255,.07);--border2:rgba(13,148,136,.3);
+      --text:#f0f4f8;--muted:#64748b;--muted2:#94a3b8;
+      --red:#f87171;--red-dim:rgba(248,113,113,.15);
+      --green:#34d399;--green-dim:rgba(52,211,153,.15);
+      --yellow:#fbbf24;--yellow-dim:rgba(251,191,36,.15);
+      --purple:#a78bfa;--purple-dim:rgba(167,139,250,.15);
+      --mono:'JetBrains Mono',monospace;
+    }
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes slideR{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+    /* LOGIN */
+    #login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+      background:radial-gradient(ellipse at 15% 50%,rgba(13,148,136,.13) 0%,transparent 55%),
+      radial-gradient(ellipse at 85% 20%,rgba(13,148,136,.08) 0%,transparent 50%),var(--bg);}
+    .auth-container{width:100%;max-width:430px;animation:fadeUp .5s ease;}
+    .auth-brand{display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:32px;}
+    .auth-brand-icon{width:40px;height:40px;background:var(--teal);border-radius:10px;display:flex;align-items:center;justify-content:center;}
+    .auth-brand-icon svg{width:21px;height:21px;stroke:#fff;fill:none;stroke-width:2.2;}
+    .auth-brand-name{font-size:20px;font-weight:800;}
+    .auth-brand-name em{color:var(--teal-l);font-style:normal;}
+    .auth-card{background:var(--card);border:1px solid var(--border2);border-radius:18px;padding:36px 36px 28px;backdrop-filter:blur(20px);}
+    .auth-card h2{font-size:22px;font-weight:700;margin-bottom:6px;}
+    .auth-card p{font-size:13px;color:var(--muted2);margin-bottom:24px;}
+    .form-group{margin-bottom:15px;}
+    .form-label{font-size:12px;color:var(--muted2);font-weight:500;display:block;margin-bottom:6px;}
+    .form-input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;transition:border-color .18s;font-family:'Inter',sans-serif;}
+    .form-input:focus{border-color:var(--teal);}
+    .form-input::placeholder{color:var(--muted);}
+    .form-select{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;transition:border-color .18s;font-family:'Inter',sans-serif;cursor:pointer;}
+    .form-select:focus{border-color:var(--teal);}
+    .btn-full{width:100%;padding:12px;background:var(--teal);border:none;border-radius:9px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;}
+    .btn-full:hover{background:#0f766e;transform:translateY(-1px);}
+    .btn-full:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+    .auth-switch{text-align:center;margin-top:18px;font-size:13px;color:var(--muted2);}
+    .auth-switch a{color:var(--teal-l);cursor:pointer;font-weight:600;text-decoration:none;}
+
+    /* APP */
+    #app{display:none;height:100vh;overflow:hidden;}
+    #app.show{display:flex;}
+    .sidebar{width:232px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;backdrop-filter:blur(20px);}
+    .sb-logo{padding:18px 16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+    .sb-logo-icon{width:32px;height:32px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .sb-logo-icon svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2.2;}
+    .sb-logo-name{font-size:15px;font-weight:800;}
+    .sb-logo-name em{color:var(--teal-l);font-style:normal;}
+    .sb-user{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .18s;}
+    .sb-user:hover{background:rgba(255,255,255,.03);}
+    .sb-avatar{width:30px;height:30px;border-radius:50%;background:var(--teal-dim);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--teal-l);flex-shrink:0;}
+    .sb-uname{font-size:12px;font-weight:600;}
+    .sb-urole{font-size:10px;color:var(--muted);text-transform:capitalize;}
+    .sb-nav{padding:12px 10px;flex:1;overflow-y:auto;}
+    .sb-section{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;padding:8px 12px 4px;}
+    .sb-item{display:flex;align-items:center;gap:9px;width:100%;padding:9px 12px;border-radius:8px;border:none;background:none;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;margin-bottom:2px;text-align:left;font-family:'Inter',sans-serif;}
+    .sb-item svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0;}
+    .sb-item:hover{background:rgba(255,255,255,.04);color:var(--muted2);}
+    .sb-item.active{background:linear-gradient(90deg,rgba(13,148,136,.22),rgba(13,148,136,.05));color:var(--teal-l);border-left:2px solid var(--teal);}
+    .sb-foot{padding:12px 10px;border-top:1px solid var(--border);}
+    .sb-logout{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border-radius:8px;border:none;background:none;color:var(--muted);font-size:13px;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;}
+    .sb-logout svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;}
+    .sb-logout:hover{background:var(--red-dim);color:var(--red);}
+    .main{flex:1;overflow-y:auto;background:var(--bg);}
+    .page{display:none;padding:24px 28px;min-height:100%;}
+    .page.active{display:block;animation:fadeIn .3s ease;}
+    .page-title{font-size:20px;font-weight:800;margin-bottom:3px;}
+    .page-sub{font-size:13px;color:var(--muted);margin-bottom:22px;}
+    .page-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;}
+    .card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+    .card-title svg{width:15px;height:15px;stroke:var(--teal);fill:none;stroke-width:2;}
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;}
+    .stat-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+    .stat-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;}
+    .si-teal{background:var(--teal-dim);color:var(--teal-l);}
+    .si-green{background:var(--green-dim);color:var(--green);}
+    .si-yellow{background:var(--yellow-dim);color:var(--yellow);}
+    .si-purple{background:var(--purple-dim);color:var(--purple);}
+    .stat-num{font-size:28px;font-weight:800;}
+    .stat-lbl{font-size:12px;color:var(--muted);margin-top:3px;}
+    .btn-p{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:var(--teal);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;}
+    .btn-p:hover{background:#0f766e;transform:translateY(-1px);}
+    .btn-p svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.2;}
+    .btn-o{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--muted2);font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;}
+    .btn-o:hover{border-color:var(--teal);color:var(--teal-l);}
+    .btn-sm{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:var(--teal-dim);border:1px solid var(--border2);border-radius:7px;color:var(--teal-l);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif;}
+    .btn-sm:hover{background:rgba(13,148,136,.25);}
+    .btn-sm svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;}
+    .btn-del{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:var(--red-dim);border:1px solid rgba(248,113,113,.3);border-radius:7px;color:var(--red);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif;}
+    .btn-del:hover{background:rgba(248,113,113,.25);}
+    .btn-del svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;}
+    .badge{display:inline-flex;padding:3px 9px;border-radius:14px;font-size:11px;font-weight:600;}
+    .bg-teal{background:var(--teal-dim);color:var(--teal-l);border:1px solid var(--border2);}
+    .bg-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(52,211,153,.3);}
+    .bg-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,113,113,.3);}
+    .bg-yellow{background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(251,191,36,.3);}
+    .bg-purple{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.3);}
+    .tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+    .tbl-top{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .tbl-hd{display:grid;padding:10px 16px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02);}
+    .tbl-hd span{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;}
+    .tbl-row{display:grid;padding:12px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background .15s;animation:fadeIn .3s ease;}
+    .tbl-row:last-child{border-bottom:none;}
+    .tbl-row:hover{background:rgba(13,148,136,.04);}
+    .tbl-empty{padding:40px;text-align:center;color:var(--muted);font-size:13px;}
+    .srch-box{flex:1;max-width:280px;display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;}
+    .srch-box svg{width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;flex-shrink:0;}
+    .srch-box input{background:none;border:none;outline:none;color:var(--text);font-size:13px;width:100%;font-family:'Inter',sans-serif;}
+    .srch-box input::placeholder{color:var(--muted);}
+    .alert{padding:11px 15px;border-radius:9px;font-size:13px;font-weight:500;margin-bottom:13px;display:flex;align-items:center;gap:9px;animation:fadeIn .25s ease;}
+    .alert svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+    .alert-ok{background:var(--green-dim);color:var(--green);border:1px solid rgba(52,211,153,.3);}
+    .alert-err{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,113,113,.3);}
+    .alert-inf{background:var(--teal-dim);color:var(--teal-l);border:1px solid var(--border2);}
+    .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;flex-shrink:0;}
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(4,8,16,.9);z-index:100;align-items:center;justify-content:center;padding:20px;}
+    .modal-bg.show{display:flex;}
+    .modal{background:var(--bg3);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:fadeUp .25s ease;}
+    .modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg3);z-index:1;}
+    .modal-hd h3{font-size:15px;font-weight:700;}
+    .modal-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:2px 7px;border-radius:6px;}
+    .modal-x:hover{color:var(--text);}
+    .modal-body{padding:20px;}
+    .modal-ft{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--bg3);}
+    .btn-cancel{padding:9px 16px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted2);font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+    .btn-cancel:hover{border-color:var(--border2);color:var(--text);}
+    .fg-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .fg-full{grid-column:1/-1;}
+    .drop-zone{border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;}
+    .drop-zone:hover,.drop-zone.ready{border-color:var(--border2);background:rgba(13,148,136,.04);}
+    .drop-zone svg{width:26px;height:26px;stroke:var(--muted);fill:none;stroke-width:1.5;margin:0 auto 10px;display:block;}
+    .drop-zone p{font-size:13px;color:var(--muted2);}
+    .drop-zone span{font-size:11px;color:var(--muted);display:block;margin-top:4px;}
+    .result-box{background:var(--card);border:1px solid var(--border2);border-radius:12px;margin-top:14px;animation:slideR .4s ease;overflow:hidden;}
+    .result-hd{display:flex;align-items:center;gap:8px;padding:14px 20px;border-bottom:1px solid var(--border);background:rgba(13,148,136,.05);}
+    .result-hd h4{font-size:14px;font-weight:700;}
+    .result-hd svg{width:16px;height:16px;fill:none;stroke-width:2;flex-shrink:0;}
+    .report-content{font-family:var(--mono);font-size:12.5px;line-height:1.9;color:#c8d8e8;padding:20px 24px;white-space:pre-wrap;word-break:break-word;background:#070e1a;border-radius:0 0 12px 12px;}
+    .result-txt{font-size:13.5px;color:var(--muted2);line-height:1.8;padding:16px 20px;white-space:pre-wrap;}
+    .confirm-ico{width:48px;height:48px;border-radius:50%;background:var(--red-dim);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+    .confirm-ico svg{width:22px;height:22px;stroke:var(--red);fill:none;stroke-width:2;}
+    .dash-hero{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:28px 32px;margin-bottom:20px;position:relative;overflow:hidden;}
+    .dash-hero-bg{position:absolute;top:0;right:0;bottom:0;width:180px;background-image:linear-gradient(rgba(13,148,136,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(13,148,136,.08) 1px,transparent 1px);background-size:18px 18px;opacity:.5;pointer-events:none;}
+    .dash-hero h2{font-size:22px;font-weight:800;margin-bottom:6px;}
+    .dash-hero h2 em{color:var(--teal-l);font-style:normal;}
+    .dash-hero p{font-size:13px;color:var(--muted2);max-width:400px;margin-bottom:18px;line-height:1.6;}
+    .dash-hero-btns{display:flex;gap:10px;flex-wrap:wrap;}
+    .col-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .col-32{display:grid;grid-template-columns:2fr 1fr;gap:14px;}
+    .rec-item{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:padding .15s;}
+    .rec-item:last-child{border-bottom:none;}
+    .rec-item:hover{padding-left:5px;}
+    .rec-av{width:34px;height:34px;border-radius:9px;background:var(--teal-dim);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--teal-l);flex-shrink:0;}
+    .rec-name{font-size:13px;font-weight:600;}
+    .rec-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+    .rec-time{font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap;}
+    .selected-patient{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--teal-dim);border:1px solid var(--border2);border-radius:9px;margin-top:10px;}
+
+    /* PROFILE */
+    .profile-hero{display:flex;align-items:center;gap:20px;padding:24px;background:var(--card);border:1px solid var(--border2);border-radius:14px;margin-bottom:20px;}
+    .profile-avatar-lg{width:72px;height:72px;border-radius:50%;background:var(--teal-dim);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:var(--teal-l);flex-shrink:0;}
+    .profile-info h2{font-size:20px;font-weight:800;}
+    .profile-info p{font-size:13px;color:var(--muted2);margin-top:3px;}
+    .profile-badges{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap;}
+
+    /* ADMIN USERS TABLE */
+    .role-badge-admin{background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3);}
+    .role-badge-doctor{background:var(--teal-dim);color:var(--teal-l);border:1px solid var(--border2);}
+    .role-badge-staff{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.3);}
+
+    /* ACTIVITY LOG */
+    .log-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+    .log-item:last-child{border-bottom:none;}
+    .log-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);margin-top:5px;flex-shrink:0;}
+    .log-dot.red{background:var(--red);}
+    .log-dot.yellow{background:var(--yellow);}
+    .log-dot.purple{background:var(--purple);}
+    .log-text{font-size:12.5px;color:var(--muted2);line-height:1.5;}
+    .log-time{font-size:11px;color:var(--muted);margin-top:3px;}
+  </style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="login-page">
+  <div class="auth-container">
+    <div class="auth-brand">
+      <div class="auth-brand-icon">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <span class="auth-brand-name">MedScan <em>AI</em></span>
+    </div>
+    <div class="auth-card">
+      <h2 id="auth-h">Welcome Back</h2>
+      <p id="auth-p">Sign in to your account to continue</p>
+      <div id="auth-alert"></div>
+      <div id="reg-extra" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input class="form-input" type="text" id="r-name" placeholder="Dr. Jane Smith">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date of Birth *</label>
+          <input class="form-input" type="date" id="r-dob">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role</label>
+          <select class="form-select" id="r-role">
+            <option value="doctor">Doctor</option>
+            <option value="staff">Staff</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address *</label>
+        <input class="form-input" type="email" id="auth-email" placeholder="doctor@hospital.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password *</label>
+        <input class="form-input" type="password" id="auth-pass" placeholder="••••••••">
+      </div>
+      <button class="btn-full" id="auth-btn" onclick="doAuth()">Sign In</button>
+      <div class="auth-switch">
+        <span id="auth-sw-t">Don't have an account?</span>
+        <a onclick="toggleMode()"> <span id="auth-sw-l">Register</span></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <span class="sb-logo-name">MedScan <em>AI</em></span>
+    </div>
+    <div class="sb-user" onclick="goPage('profile',null)">
+      <div class="sb-avatar" id="u-av">?</div>
+      <div>
+        <div class="sb-uname" id="u-name">User</div>
+        <div class="sb-urole" id="u-role">staff</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Overview</div>
+      <button class="sb-item" id="nav-dashboard" onclick="goPage('dashboard',this)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </button>
+      <div class="sb-section">Patients</div>
+      <button class="sb-item" id="nav-add-patient" onclick="goPage('add-patient',this)">
+        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Add Patient
+      </button>
+      <button class="sb-item" id="nav-patients" onclick="goPage('patients',this)">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Patient Records
+      </button>
+      <div class="sb-section">Reports</div>
+      <button class="sb-item" id="nav-upload" onclick="goPage('upload',this)">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload Report
+      </button>
+      <button class="sb-item" id="nav-history" onclick="goPage('history',this)">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/><circle cx="12" cy="12" r="10"/></svg>
+        Analysis History
+      </button>
+      <!-- Admin only -->
+      <div id="admin-nav" style="display:none">
+        <div class="sb-section">Admin</div>
+        <button class="sb-item" id="nav-users" onclick="goPage('users',this)">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          All Users
+        </button>
+        <button class="sb-item" id="nav-allreports" onclick="goPage('allreports',this)">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          All Reports
+        </button>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <button class="sb-logout" onclick="doLogout()">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page" id="pg-dashboard">
+      <div class="dash-hero">
+        <div class="dash-hero-bg"></div>
+        <h2>Good day, <em id="dash-uname">Doctor</em> 👋</h2>
+        <p>Here's your personal medical report analysis overview. All data shown is specific to your account.</p>
+        <div class="dash-hero-btns">
+          <button class="btn-p" onclick="goPage('upload',document.getElementById('nav-upload'))">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload Report
+          </button>
+          <button class="btn-o" onclick="goPage('add-patient',document.getElementById('nav-add-patient'))">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Patient
+          </button>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon si-teal">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          </div>
+          <div class="stat-num" id="s-patients">0</div>
+          <div class="stat-lbl">My Patients</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon si-green">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="stat-num" id="s-reports">0</div>
+          <div class="stat-lbl">My Reports</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon si-yellow">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="stat-num" id="s-today">0</div>
+          <div class="stat-lbl">Analyzed Today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon si-purple">
+            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div class="stat-num" style="color:var(--teal-l);font-size:20px">ACTIVE</div>
+          <div class="stat-lbl">AI Engine</div>
+        </div>
+      </div>
+      <div class="col-32">
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Recent Patients
+          </div>
+          <div id="d-patients"><div class="tbl-empty">No patients yet</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Recent Reports
+          </div>
+          <div id="d-reports"><div class="tbl-empty">No reports yet</div></div>
+        </div>
+      </div>
+      <!-- Activity Log -->
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          My Activity Log
+        </div>
+        <div id="d-activity"><div class="tbl-empty" style="padding:20px">No activity yet</div></div>
+      </div>
+    </div>
+
+    <!-- ADD PATIENT -->
+    <div class="page" id="pg-add-patient">
+      <div class="page-row">
+        <div>
+          <div class="page-title">Add New Patient</div>
+          <div class="page-sub">Register a new patient under your account.</div>
+        </div>
+      </div>
+      <div class="card" style="max-width:660px">
+        <div id="ap-alert"></div>
+        <div class="fg-2">
+          <div class="form-group">
+            <label class="form-label">Patient ID *</label>
+            <input class="form-input" type="text" id="ap-id" placeholder="PT-001" style="text-transform:uppercase">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input class="form-input" type="text" id="ap-name" placeholder="John Doe">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date of Birth *</label>
+            <input class="form-input" type="date" id="ap-dob" onchange="calcAge('ap-dob','ap-age')">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Age (auto-calculated)</label>
+            <input class="form-input" type="number" id="ap-age" placeholder="Auto" min="1" max="149" readonly style="opacity:.6;cursor:not-allowed">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Gender *</label>
+            <select class="form-select" id="ap-gender">
+              <option value="">Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input class="form-input" type="text" id="ap-phone" placeholder="+91 98765 43210">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Blood Group</label>
+            <select class="form-select" id="ap-blood">
+              <option value="">Unknown</option>
+              <option>A+</option><option>A-</option>
+              <option>B+</option><option>B-</option>
+              <option>O+</option><option>O-</option>
+              <option>AB+</option><option>AB-</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Patient Type</label>
+            <select class="form-select" id="ap-type">
+              <option value="General">General</option>
+              <option value="Emergency">Emergency</option>
+              <option value="Follow-up">Follow-up</option>
+              <option value="Consultation">Consultation</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:6px">
+          <button class="btn-p" id="ap-btn" onclick="savePatient()">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Save Patient
+          </button>
+          <button class="btn-o" onclick="clearApForm()">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PATIENT RECORDS -->
+    <div class="page" id="pg-patients">
+      <div class="page-row">
+        <div>
+          <div class="page-title">Patient Records</div>
+          <div class="page-sub">All patients registered under your account.</div>
+        </div>
+        <button class="btn-p" onclick="goPage('add-patient',document.getElementById('nav-add-patient'))">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Patient
+        </button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-top">
+          <div class="srch-box">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search by ID or name..." id="p-srch" oninput="srchPt(this.value)">
+          </div>
+          <select class="form-select" style="width:160px;padding:8px 12px;font-size:12px" onchange="filterPt(this.value)">
+            <option value="">All Types</option>
+            <option value="General">General</option>
+            <option value="Emergency">Emergency</option>
+            <option value="Follow-up">Follow-up</option>
+            <option value="Consultation">Consultation</option>
+          </select>
+        </div>
+        <div class="tbl-hd" style="grid-template-columns:90px 1fr 50px 80px 75px 105px 115px 105px">
+          <span>ID</span><span>Name</span><span>Age</span>
+          <span>Gender</span><span>Blood</span><span>Type</span><span>Registered</span><span>Actions</span>
+        </div>
+        <div id="pt-tbody"><div class="tbl-empty">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- UPLOAD REPORT -->
+    <div class="page" id="pg-upload">
+      <div class="page-title">Upload Medical Report</div>
+      <div class="page-sub">Select a patient, upload a file, and get AI-powered analysis.</div>
+      <div style="max-width:780px">
+        <div id="up-alert"></div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Step 1 — Select Patient
+          </div>
+          <div class="srch-box" style="max-width:100%">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Type patient ID (e.g. PT-001) and press Enter..." id="up-pid" onkeydown="if(event.key==='Enter')findPt()">
+          </div>
+          <div id="up-pt-res"></div>
+        </div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Step 2 — Upload File
+          </div>
+          <div class="drop-zone" id="dz" onclick="document.getElementById('upf').click()">
+            <input type="file" id="upf" style="display:none" accept=".pdf,.jpg,.jpeg,.png" onchange="onFile(this)">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p id="dz-lbl">Click to upload or drag and drop</p>
+            <span>PDF · JPG · PNG — Max 20MB</span>
+          </div>
+        </div>
+        <button class="btn-p" id="an-btn" onclick="doAnalyze()" style="width:100%;justify-content:center;padding:13px;font-size:14px">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Analyze Report with AI
+        </button>
+        <div id="an-results" style="display:none">
+          <div class="result-box">
+            <div class="result-hd">
+              <svg viewBox="0 0 24 24" style="stroke:var(--teal-l)"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              <h4>AI Medical Analysis Report</h4>
+              <span class="badge bg-teal" style="margin-left:auto">Clinical</span>
+            </div>
+            <pre class="report-content" id="r-medical"></pre>
+          </div>
+          <div class="result-box" style="border-color:rgba(167,139,250,.35)">
+            <div class="result-hd">
+              <svg viewBox="0 0 24 24" style="stroke:var(--purple)"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <h4>Extracted Report Text</h4>
+              <span class="badge bg-purple" style="margin-left:auto">Raw OCR</span>
+            </div>
+            <div class="result-txt" id="r-raw" style="max-height:180px;overflow-y:auto;font-size:12px;opacity:.75"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYSIS HISTORY -->
+    <div class="page" id="pg-history">
+      <div class="page-row">
+        <div>
+          <div class="page-title">Analysis History</div>
+          <div class="page-sub">Reports analyzed under your account.</div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-top">
+          <div class="srch-box">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search by patient ID or name..." oninput="srchHist(this.value)">
+          </div>
+        </div>
+        <div class="tbl-hd" style="grid-template-columns:100px 1fr 130px 155px 90px 100px">
+          <span>Patient ID</span><span>Patient Name</span>
+          <span>File Name</span><span>Analysis Date</span>
+          <span>Type</span><span>Actions</span>
+        </div>
+        <div id="h-tbody"><div class="tbl-empty">No history yet</div></div>
+      </div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div class="page" id="pg-profile">
+      <div class="page-title">My Profile</div>
+      <div class="page-sub">Your account details and activity summary.</div>
+      <div class="profile-hero">
+        <div class="profile-avatar-lg" id="prof-av">?</div>
+        <div class="profile-info">
+          <h2 id="prof-name">Loading...</h2>
+          <p id="prof-email">—</p>
+          <div class="profile-badges">
+            <span class="badge" id="prof-role-badge">—</span>
+            <span class="badge bg-teal" id="prof-dob-badge">—</span>
+            <span class="badge bg-green" id="prof-joined-badge">—</span>
+          </div>
+        </div>
+        <button class="btn-p" style="margin-left:auto;align-self:flex-start" onclick="openProfileEdit()">
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit Profile
+        </button>
+      </div>
+      <div class="col-2" style="margin-bottom:14px">
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Account Summary
+          </div>
+          <div id="prof-summary"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Recent Activity
+          </div>
+          <div id="prof-activity"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN: ALL USERS -->
+    <div class="page" id="pg-users">
+      <div class="page-row">
+        <div>
+          <div class="page-title">All Users</div>
+          <div class="page-sub">Admin view — all registered accounts.</div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-top">
+          <div class="srch-box">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search users..." oninput="srchUsers(this.value)">
+          </div>
+        </div>
+        <div class="tbl-hd" style="grid-template-columns:1fr 160px 80px 80px 80px 120px">
+          <span>Name / Email</span><span>Role</span><span>Patients</span><span>Reports</span><span>History</span><span>Joined</span>
+        </div>
+        <div id="users-tbody"><div class="tbl-empty">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- ADMIN: ALL REPORTS -->
+    <div class="page" id="pg-allreports">
+      <div class="page-row">
+        <div>
+          <div class="page-title">All Reports</div>
+          <div class="page-sub">Admin view — all reports across all users.</div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-top">
+          <div class="srch-box">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search by user, patient..." oninput="srchAllRpts(this.value)">
+          </div>
+        </div>
+        <div class="tbl-hd" style="grid-template-columns:130px 1fr 120px 130px 80px 100px">
+          <span>Uploaded By</span><span>Patient</span><span>File</span><span>Date</span><span>Type</span><span>Actions</span>
+        </div>
+        <div id="allrpts-tbody"><div class="tbl-empty">Loading...</div></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div id="m-confirm" class="modal-bg">
+  <div class="modal" style="max-width:370px">
+    <div class="modal-body" style="padding:28px 24px;text-align:center">
+      <div class="confirm-ico">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+      </div>
+      <h3 id="cf-title" style="font-size:16px;font-weight:700;margin-bottom:8px">Confirm Delete</h3>
+      <p id="cf-msg" style="font-size:13px;color:var(--muted2);line-height:1.6">Are you sure? This cannot be undone.</p>
+    </div>
+    <div class="modal-ft" style="justify-content:center;gap:12px">
+      <button class="btn-cancel" onclick="closeCf()">Cancel</button>
+      <button class="btn-del" id="cf-ok" onclick="runCf()" style="padding:9px 18px;font-size:13px">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW REPORT MODAL -->
+<div id="m-report" class="modal-bg">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-hd">
+      <h3 id="rm-title">Report Details</h3>
+      <button class="modal-x" onclick="closeRm()">✕</button>
+    </div>
+    <div class="modal-body" id="rm-body"></div>
+  </div>
+</div>
+
+<!-- EDIT PATIENT MODAL -->
+<div id="m-edit" class="modal-bg">
+  <div class="modal">
+    <div class="modal-hd">
+      <h3>Edit Patient</h3>
+      <button class="modal-x" onclick="closeEd()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ed-pid">
+      <div class="fg-2">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input class="form-input" type="text" id="ed-name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date of Birth</label>
+          <input class="form-input" type="date" id="ed-dob" onchange="calcAge('ed-dob','ed-age')">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Age (auto)</label>
+          <input class="form-input" type="number" id="ed-age" readonly style="opacity:.6;cursor:not-allowed">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gender</label>
+          <select class="form-select" id="ed-gender">
+            <option>Male</option><option>Female</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input class="form-input" type="text" id="ed-phone">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Blood Group</label>
+          <select class="form-select" id="ed-blood">
+            <option value="">Unknown</option>
+            <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+            <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+          </select>
+        </div>
+        <div class="form-group fg-full">
+          <label class="form-label">Patient Type</label>
+          <select class="form-select" id="ed-type">
+            <option>General</option><option>Emergency</option>
+            <option>Follow-up</option><option>Consultation</option>
+          </select>
+        </div>
+      </div>
+      <div id="ed-alert" style="margin-top:10px"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-cancel" onclick="closeEd()">Cancel</button>
+      <button class="btn-p" onclick="saveEd()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div id="m-profile" class="modal-bg">
+  <div class="modal">
+    <div class="modal-hd">
+      <h3>Edit Profile</h3>
+      <button class="modal-x" onclick="document.getElementById('m-profile').classList.remove('show')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg-2">
+        <div class="form-group fg-full">
+          <label class="form-label">Full Name</label>
+          <input class="form-input" type="text" id="pf-name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date of Birth</label>
+          <input class="form-input" type="date" id="pf-dob">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role</label>
+          <input class="form-input" type="text" id="pf-role" readonly style="opacity:.6;cursor:not-allowed">
+        </div>
+        <div class="form-group fg-full">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" id="pf-email" readonly style="opacity:.6;cursor:not-allowed">
+        </div>
+        <div class="form-group fg-full">
+          <label class="form-label">Specialization / Department</label>
+          <input class="form-input" type="text" id="pf-spec" placeholder="e.g. Cardiology, General Medicine">
+        </div>
+        <div class="form-group fg-full">
+          <label class="form-label">Hospital / Clinic Name</label>
+          <input class="form-input" type="text" id="pf-hospital" placeholder="e.g. Apollo Hospital">
+        </div>
+        <div class="form-group fg-full">
+          <label class="form-label">Phone</label>
+          <input class="form-input" type="text" id="pf-phone" placeholder="+91 99999 00000">
+        </div>
+      </div>
+      <div id="pf-alert" style="margin-top:10px"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-cancel" onclick="document.getElementById('m-profile').classList.remove('show')">Cancel</button>
+      <button class="btn-p" onclick="saveProfile()">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   DATA LAYER — localStorage (no backend required)
+   All data is keyed by userId for per-user isolation.
+   Admin can view all users' data.
+   ================================================================ */
+
+const DB = {
+  get(key) {
+    try { return JSON.parse(localStorage.getItem(key)) || null; } catch { return null; }
+  },
+  set(key, val) {
+    localStorage.setItem(key, JSON.stringify(val));
+  },
+  // Users registry (global)
+  getUsers()        { return this.get('ms_users') || []; },
+  saveUsers(u)      { this.set('ms_users', u); },
+  findUser(email)   { return this.getUsers().find(u => u.email === email); },
+  findUserById(id)  { return this.getUsers().find(u => u.id === id); },
+
+  // Per-user data
+  getPatients(uid)  { return this.get(`ms_patients_${uid}`) || []; },
+  savePatients(uid,d){ this.set(`ms_patients_${uid}`, d); },
+  getReports(uid)   { return this.get(`ms_reports_${uid}`) || []; },
+  saveReports(uid,d){ this.set(`ms_reports_${uid}`, d); },
+  getHistory(uid)   { return this.get(`ms_history_${uid}`) || []; },
+  saveHistory(uid,d){ this.set(`ms_history_${uid}`, d); },
+  getActivity(uid)  { return this.get(`ms_activity_${uid}`) || []; },
+  saveActivity(uid,d){ this.set(`ms_activity_${uid}`, d); },
+};
+
+let ME = DB.get('ms_me');   // current logged-in user
+let AUTH_MODE = 'login';
+let SEL_PATIENT = null;
+let CF_CALLBACK = null;
+let PT_FILTER = '';
+
+/* ── HELPERS ── */
+function uid() { return 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
+function now() { return new Date().toISOString(); }
+function fd(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+}
+function calcAge(dobId, ageId) {
+  const dob = document.getElementById(dobId).value;
+  if (!dob) return;
+  const age = Math.floor((Date.now() - new Date(dob)) / (365.25 * 24 * 3600 * 1000));
+  document.getElementById(ageId).value = age > 0 ? age : '';
+}
+function typeBadge(t) {
+  return {General:'bg-teal',Emergency:'bg-red','Follow-up':'bg-green',Consultation:'bg-yellow'}[t]||'bg-teal';
+}
+function roleBadgeCls(r) {
+  return {admin:'role-badge-admin',doctor:'role-badge-doctor',staff:'role-badge-staff'}[r]||'bg-teal';
+}
+function al(type, msg) {
+  const ico = {
+    ok:  '<polyline points="20 6 9 17 4 12"/>',
+    err: '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+    inf: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+  };
+  return `<div class="alert alert-${type}"><svg viewBox="0 0 24 24">${ico[type]||ico.inf}</svg>${msg}</div>`;
+}
+function logActivity(action, color='teal') {
+  if (!ME) return;
+  const logs = DB.getActivity(ME.id);
+  logs.unshift({ action, color, time: now() });
+  if (logs.length > 50) logs.splice(50);
+  DB.saveActivity(ME.id, logs);
+}
+
+/* ── AUTH ── */
+function toggleMode() {
+  AUTH_MODE = AUTH_MODE === 'login' ? 'register' : 'login';
+  const r = AUTH_MODE === 'register';
+  document.getElementById('auth-h').textContent    = r ? 'Create Account' : 'Welcome Back';
+  document.getElementById('auth-p').textContent    = r ? 'Join MedScan AI today' : 'Sign in to your account to continue';
+  document.getElementById('auth-btn').textContent  = r ? 'Create Account' : 'Sign In';
+  document.getElementById('auth-sw-t').textContent = r ? 'Already have an account?' : "Don't have an account?";
+  document.getElementById('auth-sw-l').textContent = r ? 'Login' : 'Register';
+  document.getElementById('reg-extra').style.display = r ? 'block' : 'none';
+  document.getElementById('auth-alert').innerHTML  = '';
+}
+
+function doAuth() {
+  const email = document.getElementById('auth-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('auth-pass').value;
+  const aEl   = document.getElementById('auth-alert');
+  const btn   = document.getElementById('auth-btn');
+  if (!email || !pass) { aEl.innerHTML = al('err','Please fill in all fields.'); return; }
+
+  if (AUTH_MODE === 'register') {
+    const name = document.getElementById('r-name').value.trim();
+    const dob  = document.getElementById('r-dob').value;
+    const role = document.getElementById('r-role').value;
+    if (!name || !dob) { aEl.innerHTML = al('err','Name and Date of Birth are required.'); return; }
+    if (DB.findUser(email)) { aEl.innerHTML = al('err','An account with this email already exists.'); return; }
+    const newUser = { id: uid(), name, email, password: pass, role, dob, joined: now(), specialization:'', hospital:'', phone:'' };
+    const users = DB.getUsers();
+    users.push(newUser);
+    DB.saveUsers(users);
+    ME = newUser;
+  } else {
+    const user = DB.findUser(email);
+    if (!user || user.password !== pass) { aEl.innerHTML = al('err','Incorrect email or password.'); return; }
+    ME = user;
+  }
+
+  DB.set('ms_me', ME);
+  startApp();
+}
+
+function startApp() {
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  document.getElementById('u-name').textContent = ME.name;
+  document.getElementById('u-role').textContent = ME.role;
+  document.getElementById('u-av').textContent   = ME.name[0].toUpperCase();
+  document.getElementById('dash-uname').textContent = ME.name.split(' ')[0];
+  // Show admin nav
+  document.getElementById('admin-nav').style.display = ME.role === 'admin' ? 'block' : 'none';
+  goPage('dashboard', document.getElementById('nav-dashboard'));
+}
+
+function doLogout() {
+  ME = null;
+  DB.set('ms_me', null);
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('login-page').style.display = 'flex';
+  document.getElementById('auth-email').value = '';
+  document.getElementById('auth-pass').value  = '';
+  document.getElementById('auth-alert').innerHTML = '';
+}
+
+window.addEventListener('load', () => {
+  if (ME) { startApp(); return; }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('login-page').style.display !== 'none') doAuth();
+  });
+});
+
+/* ── NAV ── */
+function goPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('active'));
+  const pg = document.getElementById('pg-' + name);
+  if (pg) pg.classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'dashboard')  loadDash();
+  if (name === 'patients')   loadPt();
+  if (name === 'history')    loadHist();
+  if (name === 'profile')    loadProfile();
+  if (name === 'users')      loadUsers();
+  if (name === 'allreports') loadAllRpts();
+}
+
+/* ── DASHBOARD ── */
+function loadDash() {
+  const uid = ME.id;
+  const patients = DB.getPatients(uid);
+  const reports  = DB.getReports(uid);
+  const history  = DB.getHistory(uid);
+  const today    = new Date().toDateString();
+  const todayCount = history.filter(h => new Date(h.date).toDateString() === today).length;
+
+  document.getElementById('s-patients').textContent = patients.length;
+  document.getElementById('s-reports').textContent  = reports.length;
+  document.getElementById('s-today').textContent    = todayCount;
+
+  // Recent patients
+  const pp = document.getElementById('d-patients');
+  const recPts = [...patients].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0,5);
+  pp.innerHTML = recPts.length
+    ? recPts.map(p => `
+        <div class="rec-item" onclick="goPage('patients',document.getElementById('nav-patients'))">
+          <div class="rec-av">${p.name[0].toUpperCase()}</div>
+          <div><div class="rec-name">${p.name}</div><div class="rec-sub">${p.patient_id} · ${p.patient_type}</div></div>
+          <span class="rec-time">${fd(p.created_at)}</span>
+        </div>`).join('')
+    : '<div class="tbl-empty" style="padding:20px">No patients yet</div>';
+
+  // Recent reports
+  const rr = document.getElementById('d-reports');
+  const recRpts = [...reports].sort((a,b) => new Date(b.upload_date) - new Date(a.upload_date)).slice(0,5);
+  rr.innerHTML = recRpts.length
+    ? recRpts.map(r => {
+        const pt = patients.find(p => p.patient_id === r.patient_id);
+        return `<div class="rec-item" onclick="viewRpt('${r.id}')">
+          <div class="rec-av" style="font-size:9px">${(r.file_type||'?').toUpperCase()}</div>
+          <div><div class="rec-name">${r.file_name}</div><div class="rec-sub">${pt ? pt.name : 'Unknown'}</div></div>
+          <span class="rec-time">${fd(r.upload_date)}</span>
+        </div>`;
+      }).join('')
+    : '<div class="tbl-empty" style="padding:20px">No reports yet</div>';
+
+  // Activity log
+  const logs = DB.getActivity(uid).slice(0, 8);
+  const actEl = document.getElementById('d-activity');
+  actEl.innerHTML = logs.length
+    ? logs.map(l => `
+        <div class="log-item">
+          <div class="log-dot ${l.color==='red'?'red':l.color==='yellow'?'yellow':l.color==='purple'?'purple':''}"></div>
+          <div><div class="log-text">${l.action}</div><div class="log-time">${fd(l.time)}</div></div>
+        </div>`).join('')
+    : '<div class="tbl-empty" style="padding:20px">No activity yet</div>';
+}
+
+/* ── PATIENTS ── */
+function savePatient() {
+  const aEl = document.getElementById('ap-alert');
+  const btn  = document.getElementById('ap-btn');
+  const dob  = document.getElementById('ap-dob').value;
+  const body = {
+    patient_id:   document.getElementById('ap-id').value.trim().toUpperCase(),
+    name:         document.getElementById('ap-name').value.trim(),
+    dob,
+    age:          parseInt(document.getElementById('ap-age').value) || 0,
+    gender:       document.getElementById('ap-gender').value,
+    phone:        document.getElementById('ap-phone').value.trim(),
+    blood_group:  document.getElementById('ap-blood').value,
+    patient_type: document.getElementById('ap-type').value,
+    created_at:   now(),
+    owner_id:     ME.id,
+  };
+  if (!body.patient_id || !body.name || !body.dob || !body.gender) {
+    aEl.innerHTML = al('err','Please fill in all required fields (ID, Name, DOB, Gender).');
+    return;
+  }
+  const existing = DB.getPatients(ME.id);
+  if (existing.find(p => p.patient_id === body.patient_id)) {
+    aEl.innerHTML = al('err', `Patient ID "${body.patient_id}" already exists.`);
+    return;
+  }
+  btn.disabled = true;
+  existing.push(body);
+  DB.savePatients(ME.id, existing);
+  logActivity(`Added patient: ${body.name} (${body.patient_id})`, 'teal');
+  aEl.innerHTML = al('ok', `Patient ${body.patient_id} registered successfully!`);
+  clearApForm();
+  btn.disabled = false;
+  setTimeout(() => aEl.innerHTML = '', 4000);
+}
+
+function clearApForm() {
+  ['ap-id','ap-name','ap-dob','ap-age','ap-phone'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('ap-gender').value = '';
+  document.getElementById('ap-blood').value  = '';
+  document.getElementById('ap-type').value   = 'General';
+}
+
+function loadPt(search='', typeFilter='') {
+  const tbody = document.getElementById('pt-tbody');
+  let data = DB.getPatients(ME.id);
+  if (search)     data = data.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.patient_id.toLowerCase().includes(search.toLowerCase()));
+  if (typeFilter) data = data.filter(p => p.patient_type === typeFilter);
+  data.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  if (!data.length) { tbody.innerHTML = '<div class="tbl-empty">No patients found</div>'; return; }
+  tbody.innerHTML = data.map(p => `
+    <div class="tbl-row" style="grid-template-columns:90px 1fr 50px 80px 75px 105px 115px 105px">
+      <span><span class="badge bg-teal">${p.patient_id}</span></span>
+      <span style="font-weight:600">${p.name}</span>
+      <span style="color:var(--muted2)">${p.age||'—'}</span>
+      <span style="color:var(--muted2)">${p.gender}</span>
+      <span style="color:var(--muted2)">${p.blood_group||'—'}</span>
+      <span><span class="badge ${typeBadge(p.patient_type)}">${p.patient_type}</span></span>
+      <span style="color:var(--muted);font-size:12px">${fd(p.created_at)}</span>
+      <span style="display:flex;gap:5px">
+        <button class="btn-sm" onclick='openEd(${JSON.stringify(p)})'>
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-del" onclick="askDel('patient','${p.patient_id}','Delete patient ${p.name}?')">
+          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+        </button>
+      </span>
+    </div>`).join('');
+}
+
+let _ptT;
+function srchPt(v) { clearTimeout(_ptT); _ptT = setTimeout(() => loadPt(v, PT_FILTER), 200); }
+function filterPt(v) { PT_FILTER = v; loadPt(document.getElementById('p-srch').value, v); }
+
+function openEd(p) {
+  document.getElementById('ed-pid').value    = p.patient_id;
+  document.getElementById('ed-name').value   = p.name;
+  document.getElementById('ed-dob').value    = p.dob || '';
+  document.getElementById('ed-age').value    = p.age || '';
+  document.getElementById('ed-gender').value = p.gender;
+  document.getElementById('ed-phone').value  = p.phone || '';
+  document.getElementById('ed-blood').value  = p.blood_group || '';
+  document.getElementById('ed-type').value   = p.patient_type;
+  document.getElementById('ed-alert').innerHTML = '';
+  document.getElementById('m-edit').classList.add('show');
+}
+function closeEd() { document.getElementById('m-edit').classList.remove('show'); }
+function saveEd() {
+  const pid  = document.getElementById('ed-pid').value;
+  const patients = DB.getPatients(ME.id);
+  const idx = patients.findIndex(p => p.patient_id === pid);
+  if (idx === -1) { document.getElementById('ed-alert').innerHTML = al('err','Patient not found.'); return; }
+  patients[idx] = {
+    ...patients[idx],
+    name:         document.getElementById('ed-name').value.trim(),
+    dob:          document.getElementById('ed-dob').value,
+    age:          parseInt(document.getElementById('ed-age').value) || patients[idx].age,
+    gender:       document.getElementById('ed-gender').value,
+    phone:        document.getElementById('ed-phone').value.trim(),
+    blood_group:  document.getElementById('ed-blood').value,
+    patient_type: document.getElementById('ed-type').value,
+  };
+  DB.savePatients(ME.id, patients);
+  logActivity(`Updated patient: ${patients[idx].name} (${pid})`, 'yellow');
+  closeEd();
+  loadPt();
+}
+
+/* ── CONFIRM / DELETE ── */
+function askDel(type, id, msg) {
+  document.getElementById('cf-title').textContent = `Delete ${type === 'patient' ? 'Patient' : 'Record'}`;
+  document.getElementById('cf-msg').textContent   = msg + ' This action cannot be undone.';
+  document.getElementById('m-confirm').classList.add('show');
+  CF_CALLBACK = () => {
+    if (type === 'patient') {
+      const pts = DB.getPatients(ME.id).filter(p => p.patient_id !== id);
+      DB.savePatients(ME.id, pts);
+      const rpts = DB.getReports(ME.id).filter(r => r.patient_id !== id);
+      DB.saveReports(ME.id, rpts);
+      const hist = DB.getHistory(ME.id).filter(h => h.patient_id !== id);
+      DB.saveHistory(ME.id, hist);
+      logActivity(`Deleted patient ID: ${id}`, 'red');
+      loadPt();
+    }
+    if (type === 'report') {
+      const rpts = DB.getReports(ME.id).filter(r => r.id !== id);
+      DB.saveReports(ME.id, rpts);
+      const hist = DB.getHistory(ME.id).filter(h => h.report_id !== id);
+      DB.saveHistory(ME.id, hist);
+      logActivity(`Deleted report ID: ${id}`, 'red');
+      loadHist();
+    }
+    if (type === 'history') {
+      const hist = DB.getHistory(ME.id).filter(h => h.id !== id);
+      DB.saveHistory(ME.id, hist);
+      logActivity(`Deleted history entry`, 'red');
+      loadHist();
+    }
+    // Always refresh dashboard stats live
+    if (document.getElementById('pg-dashboard').classList.contains('active')) loadDash();
+  };
+}
+function closeCf()  { document.getElementById('m-confirm').classList.remove('show'); CF_CALLBACK = null; }
+function runCf()    { if (CF_CALLBACK) { CF_CALLBACK(); closeCf(); } }
+
+/* ── UPLOAD ── */
+function findPt() {
+  const val = document.getElementById('up-pid').value.trim().toUpperCase();
+  const el  = document.getElementById('up-pt-res');
+  if (!val) { el.innerHTML = ''; SEL_PATIENT = null; return; }
+  const p = DB.getPatients(ME.id).find(pt => pt.patient_id === val);
+  if (p) {
+    SEL_PATIENT = p;
+    el.innerHTML = `
+      <div class="selected-patient">
+        <div class="rec-av">${p.name[0]}</div>
+        <div>
+          <div style="font-size:13px;font-weight:600">${p.name}</div>
+          <div style="font-size:11px;color:var(--muted)">${p.patient_id} · Age ${p.age||'?'} · ${p.gender} · DOB: ${p.dob||'N/A'} · ${p.patient_type}</div>
+        </div>
+        <span class="badge bg-green" style="margin-left:auto">✓ Selected</span>
+      </div>`;
+  } else {
+    SEL_PATIENT = null;
+    el.innerHTML = `<div style="font-size:12px;color:var(--muted);padding:8px 0">
+      Patient not found in your records.
+      <a style="color:var(--teal-l);cursor:pointer" onclick="goPage('add-patient',document.getElementById('nav-add-patient'))">Register patient →</a>
+    </div>`;
+  }
+}
+
+function onFile(inp) {
+  if (inp.files[0]) {
+    document.getElementById('dz-lbl').textContent = inp.files[0].name;
+    document.getElementById('dz').classList.add('ready');
+  }
+}
+
+async function doAnalyze() {
+  const aEl  = document.getElementById('up-alert');
+  const file = document.getElementById('upf').files[0];
+  const btn  = document.getElementById('an-btn');
+
+  if (!SEL_PATIENT) {
+    aEl.innerHTML = al('err', 'Please search and select a patient first.');
+    return;
+  }
+  if (!file) {
+    aEl.innerHTML = al('err', 'Please upload a report file (PDF, JPG, or PNG).');
+    return;
+  }
+
+  aEl.innerHTML = '';
+  btn.disabled  = true;
+  btn.innerHTML = '<span class="spinner"></span> Analyzing with Groq AI...';
+  document.getElementById('an-results').style.display = 'none';
+
+  try {
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    // Read as base64
+    const base64 = await new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload  = () => res(reader.result.split(',')[1]);
+      reader.onerror = () => rej(new Error('File read failed'));
+      reader.readAsDataURL(file);
+    });
+
+    // Call backend proxy
+    const resp = await fetch('http://localhost:8000/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        
+      },
+      body: JSON.stringify({
+        file_base64:    base64,
+        file_type:      ext,
+        patient_name:   SEL_PATIENT.name,
+        patient_age:    String(SEL_PATIENT.age || ''),
+        patient_gender: SEL_PATIENT.gender || '',
+        patient_dob:    SEL_PATIENT.dob    || '',
+        patient_blood:  SEL_PATIENT.blood_group || '',
+      })
+    });
+
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || 'Analysis failed');
+
+    const medicalSummary = data.medical_summary || 'No summary generated.';
+    const originalText   = data.original_text   || 'No text extracted.';
+
+    // Save to localStorage
+    const reportId = uid();
+    const reports  = DB.getReports(ME.id);
+    reports.push({
+      id:              reportId,
+      patient_id:      SEL_PATIENT.patient_id,
+      file_name:       file.name,
+      file_type:       ext,
+      upload_date:     now(),
+      medical_summary: medicalSummary,
+      original_text:   originalText,
+    });
+    DB.saveReports(ME.id, reports);
+
+    // Save history
+    const history = DB.getHistory(ME.id);
+    history.push({
+      id:         uid(),
+      patient_id: SEL_PATIENT.patient_id,
+      report_id:  reportId,
+      date:       now(),
+    });
+    DB.saveHistory(ME.id, history);
+
+    logActivity(
+      `Analyzed report for ${SEL_PATIENT.name} (${SEL_PATIENT.patient_id}) — ${file.name}`,
+      'teal'
+    );
+
+    document.getElementById('r-medical').textContent = medicalSummary;
+    document.getElementById('r-raw').textContent     = originalText;
+    document.getElementById('an-results').style.display = 'block';
+    aEl.innerHTML = al('ok', `Report analyzed successfully using Groq AI!`);
+
+    // Reset upload zone
+    document.getElementById('upf').value = '';
+    document.getElementById('dz-lbl').textContent = 'Click to upload or drag and drop';
+    document.getElementById('dz').classList.remove('ready');
+
+    // Refresh dashboard stats
+    if (document.getElementById('pg-dashboard').classList.contains('active')) loadDash();
+
+  } catch(e) {
+    aEl.innerHTML = al('err', e.message);
+  } finally {
+    btn.disabled  = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" width="14" height="14"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Analyze Report with AI';
+  }
+}
+
+/* ── HISTORY ── */
+function loadHist(search='') {
+  const tbody = document.getElementById('h-tbody');
+  const patients = DB.getPatients(ME.id);
+  const reports  = DB.getReports(ME.id);
+  let history    = DB.getHistory(ME.id);
+  history.sort((a,b) => new Date(b.date) - new Date(a.date));
+  if (search) {
+    history = history.filter(h => {
+      const pt = patients.find(p => p.patient_id === h.patient_id);
+      return pt && (pt.name.toLowerCase().includes(search.toLowerCase()) || pt.patient_id.toLowerCase().includes(search.toLowerCase()));
+    });
+  }
+  if (!history.length) { tbody.innerHTML = '<div class="tbl-empty">No history yet</div>'; return; }
+  tbody.innerHTML = history.map(h => {
+    const pt  = patients.find(p => p.patient_id === h.patient_id);
+    const rpt = reports.find(r => r.id === h.report_id);
+    return `
+      <div class="tbl-row" style="grid-template-columns:100px 1fr 130px 155px 90px 100px">
+        <span><span class="badge bg-teal">${pt?.patient_id||'—'}</span></span>
+        <span style="font-weight:600">${pt?.name||'Unknown'}</span>
+        <span style="color:var(--muted2);font-size:12px">${rpt ? rpt.file_name.substring(0,16)+(rpt.file_name.length>16?'...':'') : '—'}</span>
+        <span style="color:var(--muted);font-size:12px">${fd(h.date)}</span>
+        <span><span class="badge ${rpt?.file_type==='pdf'?'bg-purple':'bg-teal'}">${(rpt?.file_type||'?').toUpperCase()}</span></span>
+        <span style="display:flex;gap:5px">
+          <button class="btn-sm" onclick="viewRpt('${rpt?.id}')">View</button>
+          <button class="btn-del" onclick="askDel('history','${h.id}','Delete this history entry?')">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          </button>
+        </span>
+      </div>`;
+  }).join('');
+}
+
+let _htT;
+function srchHist(v) { clearTimeout(_htT); _htT = setTimeout(() => loadHist(v), 200); }
+
+/* ── VIEW REPORT ── */
+function viewRpt(id) {
+  if (!id) return;
+  const reports  = DB.getReports(ME.id);
+  const patients = DB.getPatients(ME.id);
+  // If admin viewing all reports, search across all users
+  let rpt = reports.find(r => r.id === id);
+  if (!rpt && ME.role === 'admin') {
+    DB.getUsers().forEach(u => {
+      if (!rpt) rpt = DB.getReports(u.id).find(r => r.id === id);
+    });
+  }
+  if (!rpt) { alert('Report not found.'); return; }
+  const pt = patients.find(p => p.patient_id === rpt.patient_id) ||
+             DB.getUsers().reduce((found, u) => found || DB.getPatients(u.id).find(p => p.patient_id === rpt.patient_id), null);
+
+  document.getElementById('rm-title').textContent = rpt.file_name;
+  document.getElementById('rm-body').innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <span class="badge bg-teal">Patient: ${pt?.patient_id||'—'}</span>
+      <span class="badge bg-green">${pt?.name||'Unknown'}</span>
+      <span class="badge bg-purple">${(rpt.file_type||'?').toUpperCase()}</span>
+      <span style="margin-left:auto;font-size:11px;color:var(--muted)">${fd(rpt.upload_date)}</span>
+    </div>
+    ${pt ? `<div style="font-size:11px;color:var(--muted);margin-bottom:12px">DOB: ${pt.dob||'N/A'} · Age: ${pt.age||'N/A'} · Blood: ${pt.blood_group||'N/A'}</div>` : ''}
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;color:var(--teal-l);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">AI Medical Analysis Report</div>
+      <pre style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c8d8e8;line-height:1.8;background:#070e1a;padding:16px;border-radius:8px;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto">${rpt.medical_summary||'Not available'}</pre>
+    </div>
+    <div>
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Extracted Text</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;background:var(--bg2);padding:12px;border-radius:8px;max-height:140px;overflow-y:auto">${rpt.original_text||'No text'}</div>
+    </div>`;
+  document.getElementById('m-report').classList.add('show');
+}
+function closeRm() { document.getElementById('m-report').classList.remove('show'); }
+
+/* ── PROFILE ── */
+function loadProfile() {
+  const uid = ME.id;
+  const patients = DB.getPatients(uid);
+  const reports  = DB.getReports(uid);
+  const history  = DB.getHistory(uid);
+  const logs     = DB.getActivity(uid);
+
+  document.getElementById('prof-av').textContent    = ME.name[0].toUpperCase();
+  document.getElementById('prof-name').textContent  = ME.name;
+  document.getElementById('prof-email').textContent = ME.email;
+
+  const roleCls = roleBadgeCls(ME.role);
+  document.getElementById('prof-role-badge').className  = `badge ${roleCls}`;
+  document.getElementById('prof-role-badge').textContent = ME.role.charAt(0).toUpperCase() + ME.role.slice(1);
+  document.getElementById('prof-dob-badge').textContent  = ME.dob ? `DOB: ${fd(ME.dob)}` : 'DOB: Not set';
+  document.getElementById('prof-joined-badge').textContent = `Joined: ${fd(ME.joined)}`;
+
+  document.getElementById('prof-summary').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:13px;color:var(--muted2)">Total Patients</span>
+        <span style="font-size:18px;font-weight:800;color:var(--teal-l)">${patients.length}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:13px;color:var(--muted2)">Reports Analyzed</span>
+        <span style="font-size:18px;font-weight:800;color:var(--green)">${reports.length}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:13px;color:var(--muted2)">History Entries</span>
+        <span style="font-size:18px;font-weight:800;color:var(--yellow)">${history.length}</span>
+      </div>
+      ${ME.specialization ? `<div style="padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:11px;color:var(--muted)">Specialization</span><div style="font-size:13px;font-weight:600;margin-top:2px">${ME.specialization}</div></div>` : ''}
+      ${ME.hospital ? `<div style="padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:11px;color:var(--muted)">Hospital</span><div style="font-size:13px;font-weight:600;margin-top:2px">${ME.hospital}</div></div>` : ''}
+      ${ME.phone ? `<div style="padding:8px 0"><span style="font-size:11px;color:var(--muted)">Phone</span><div style="font-size:13px;font-weight:600;margin-top:2px">${ME.phone}</div></div>` : ''}
+    </div>`;
+
+  const recentLogs = logs.slice(0, 6);
+  document.getElementById('prof-activity').innerHTML = recentLogs.length
+    ? recentLogs.map(l => `
+        <div class="log-item">
+          <div class="log-dot ${l.color==='red'?'red':l.color==='yellow'?'yellow':l.color==='purple'?'purple':''}"></div>
+          <div><div class="log-text">${l.action}</div><div class="log-time">${fd(l.time)}</div></div>
+        </div>`).join('')
+    : '<div style="font-size:13px;color:var(--muted);padding:10px 0">No activity yet</div>';
+}
+
+function openProfileEdit() {
+  document.getElementById('pf-name').value     = ME.name;
+  document.getElementById('pf-dob').value      = ME.dob || '';
+  document.getElementById('pf-role').value     = ME.role;
+  document.getElementById('pf-email').value    = ME.email;
+  document.getElementById('pf-spec').value     = ME.specialization || '';
+  document.getElementById('pf-hospital').value = ME.hospital || '';
+  document.getElementById('pf-phone').value    = ME.phone || '';
+  document.getElementById('pf-alert').innerHTML = '';
+  document.getElementById('m-profile').classList.add('show');
+}
+function saveProfile() {
+  const name = document.getElementById('pf-name').value.trim();
+  if (!name) { document.getElementById('pf-alert').innerHTML = al('err','Name is required.'); return; }
+  const users = DB.getUsers();
+  const idx = users.findIndex(u => u.id === ME.id);
+  users[idx] = {
+    ...users[idx],
+    name,
+    dob:            document.getElementById('pf-dob').value,
+    specialization: document.getElementById('pf-spec').value.trim(),
+    hospital:       document.getElementById('pf-hospital').value.trim(),
+    phone:          document.getElementById('pf-phone').value.trim(),
+  };
+  DB.saveUsers(users);
+  ME = users[idx];
+  DB.set('ms_me', ME);
+  logActivity('Updated profile', 'purple');
+  document.getElementById('u-name').textContent = ME.name;
+  document.getElementById('u-av').textContent   = ME.name[0].toUpperCase();
+  document.getElementById('dash-uname').textContent = ME.name.split(' ')[0];
+  document.getElementById('m-profile').classList.remove('show');
+  loadProfile();
+}
+
+/* ── ADMIN: ALL USERS ── */
+function loadUsers(search='') {
+  if (ME.role !== 'admin') return;
+  const tbody = document.getElementById('users-tbody');
+  let users = DB.getUsers();
+  if (search) users = users.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase()));
+  if (!users.length) { tbody.innerHTML = '<div class="tbl-empty">No users found</div>'; return; }
+  tbody.innerHTML = users.map(u => {
+    const pts  = DB.getPatients(u.id).length;
+    const rpts = DB.getReports(u.id).length;
+    const hist = DB.getHistory(u.id).length;
+    const rCls = roleBadgeCls(u.role);
+    return `
+      <div class="tbl-row" style="grid-template-columns:1fr 160px 80px 80px 80px 120px">
+        <span>
+          <div style="font-weight:600">${u.name}</div>
+          <div style="font-size:11px;color:var(--muted)">${u.email}</div>
+        </span>
+        <span><span class="badge ${rCls}">${u.role}</span></span>
+        <span style="color:var(--teal-l);font-weight:700">${pts}</span>
+        <span style="color:var(--green);font-weight:700">${rpts}</span>
+        <span style="color:var(--yellow);font-weight:700">${hist}</span>
+        <span style="font-size:12px;color:var(--muted)">${fd(u.joined)}</span>
+      </div>`;
+  }).join('');
+}
+let _utT;
+function srchUsers(v) { clearTimeout(_utT); _utT = setTimeout(() => loadUsers(v), 200); }
+
+/* ── ADMIN: ALL REPORTS ── */
+function loadAllRpts(search='') {
+  if (ME.role !== 'admin') return;
+  const tbody = document.getElementById('allrpts-tbody');
+  const users  = DB.getUsers();
+  let rows = [];
+  users.forEach(u => {
+    const patients = DB.getPatients(u.id);
+    const reports  = DB.getReports(u.id);
+    reports.forEach(r => {
+      const pt = patients.find(p => p.patient_id === r.patient_id);
+      rows.push({ ...r, uploaderName: u.name, uploaderId: u.id, pt });
+    });
+  });
+  rows.sort((a,b) => new Date(b.upload_date) - new Date(a.upload_date));
+  if (search) {
+    rows = rows.filter(r =>
+      r.uploaderName.toLowerCase().includes(search.toLowerCase()) ||
+      (r.pt?.name||'').toLowerCase().includes(search.toLowerCase()) ||
+      r.file_name.toLowerCase().includes(search.toLowerCase())
+    );
+  }
+  if (!rows.length) { tbody.innerHTML = '<div class="tbl-empty">No reports found</div>'; return; }
+  tbody.innerHTML = rows.map(r => `
+    <div class="tbl-row" style="grid-template-columns:130px 1fr 120px 130px 80px 100px">
+      <span style="font-size:12px;color:var(--teal-l);font-weight:600">${r.uploaderName}</span>
+      <span style="font-weight:600">${r.pt?.name||'Unknown'} <span style="font-size:11px;color:var(--muted)">(${r.patient_id})</span></span>
+      <span style="font-size:12px;color:var(--muted2)">${r.file_name.substring(0,14)}${r.file_name.length>14?'...':''}</span>
+      <span style="font-size:12px;color:var(--muted)">${fd(r.upload_date)}</span>
+      <span><span class="badge ${r.file_type==='pdf'?'bg-purple':'bg-teal'}">${(r.file_type||'?').toUpperCase()}</span></span>
+      <span><button class="btn-sm" onclick="viewRptAdmin('${r.id}','${r.uploaderId}')">View</button></span>
+    </div>`).join('');
+}
+let _arT;
+function srchAllRpts(v) { clearTimeout(_arT); _arT = setTimeout(() => loadAllRpts(v), 200); }
+
+function viewRptAdmin(reportId, uploaderId) {
+  const reports  = DB.getReports(uploaderId);
+  const patients = DB.getPatients(uploaderId);
+  const rpt = reports.find(r => r.id === reportId);
+  if (!rpt) { alert('Report not found.'); return; }
+  const pt = patients.find(p => p.patient_id === rpt.patient_id);
+  const uploader = DB.findUserById(uploaderId);
+
+  document.getElementById('rm-title').textContent = rpt.file_name;
+  document.getElementById('rm-body').innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <span class="badge bg-teal">Patient: ${pt?.patient_id||'—'}</span>
+      <span class="badge bg-green">${pt?.name||'Unknown'}</span>
+      <span class="badge bg-yellow">By: ${uploader?.name||'Unknown'}</span>
+      <span class="badge bg-purple">${(rpt.file_type||'?').toUpperCase()}</span>
+      <span style="margin-left:auto;font-size:11px;color:var(--muted)">${fd(rpt.upload_date)}</span>
+    </div>
+    ${pt ? `<div style="font-size:11px;color:var(--muted);margin-bottom:12px">DOB: ${pt.dob||'N/A'} · Age: ${pt.age||'N/A'} · Blood: ${pt.blood_group||'N/A'}</div>` : ''}
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;color:var(--teal-l);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">AI Medical Analysis Report</div>
+      <pre style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c8d8e8;line-height:1.8;background:#070e1a;padding:16px;border-radius:8px;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto">${rpt.medical_summary||'Not available'}</pre>
+    </div>
+    <div>
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Extracted Text</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;background:var(--bg2);padding:12px;border-radius:8px;max-height:140px;overflow-y:auto">${rpt.original_text||'No text'}</div>
+    </div>`;
+  document.getElementById('m-report').classList.add('show');
+}
+
+/* ── MODAL OUTSIDE CLICK ── */
+document.querySelectorAll('.modal-bg').forEach(el => {
+  el.addEventListener('click', e => {
+    if (e.target === el) {
+      el.classList.remove('show');
+      if (el.id === 'm-confirm') CF_CALLBACK = null;
+    }
+  });
+});
+</script>
+</body>
+</html>
